@@ -5,6 +5,9 @@ plugins {
 group 'com.github.com.irvifa'
 version '1.0-SNAPSHOT'
 
+apply plugin: 'idea'
+apply plugin: 'checkstyle'
+
 sourceCompatibility = 1.8
 
 repositories {
@@ -13,4 +16,12 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile "org.hamcrest:hamcrest-all:1.3"
+}
+
+checkstyle {
+    toolVersion = '8.8'
+    configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+    ignoreFailures = false
+    showViolations = true
 }

@@ -1,15 +1,6 @@
-package com.github.irvifa.algorithmnotes.leetcode.sumofleftleaves;
+package com.github.irvifa.algorithmnotes.leetcode.tree.sumofleftleaves;
 
-class TreeNode {
-
-  int val;
-  TreeNode left;
-  TreeNode right;
-
-  TreeNode(int x) {
-    val = x;
-  }
-}
+import com.github.irvifa.algorithmnotes.leetcode.tree.TreeNode;
 
 // https://leetcode.com/problems/sum-of-left-leaves/
 public class Solution {
@@ -18,7 +9,8 @@ public class Solution {
     return sumOfLeftLeaves(root, false);
   }
 
-  private int sumOfLeftLeaves(TreeNode root, boolean isLeft) {
+  private int sumOfLeftLeaves(
+      TreeNode root, boolean isLeft) {
     if (root == null) {
       return 0;
     }
