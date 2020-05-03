@@ -62,7 +62,7 @@ N is the size of the input.
     Time complexity : O(N). To prove that the time complexity is O(N),
     the biggest problem lies in finding the time complexity of finding the predecessor nodes of all the nodes in the binary tree. 
     Intuitively, the complexity is O(N log⁡ N), because to find the predecessor node for a single node related to the height of the tree.
-    However, finding the predecessor nodes for all nodes only needs O(N) time, since a binary Tree with nnn nodes has N-1 edges,
+    However, finding the predecessor nodes for all nodes only needs O(N) time, since a binary Tree with N nodes has N-1 edges,
     the whole processing for each edges up to 2 times, one is to locate a node, and the other is to find the predecessor node.
     So the complexity is O(N).
 
