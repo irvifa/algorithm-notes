@@ -8,13 +8,13 @@ The maximum depth is the number of nodes along the longest path from the root no
 
 ### Recursion
 
-### Intuition
+#### Intuition
 
 From the definition, an intuitive idea would be to traverse the tree and record the maximum depth during the traversal. 
 
 One could traverse the tree either by Depth-First Search (DFS) strategy or Breadth-First Search (BFS) strategy. For this problem, either way would do. Here we demonstrate a solution that is implemented with the DFS strategy and recursion.
 
-### Complexity
+#### Complexity
 
     Time complexity : we visit each node exactly once, thus the time complexity is O(N), where N is the number of nodes.
 
