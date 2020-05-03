@@ -35,6 +35,7 @@
     <property name="message" value="Whitespace at end-of-line"/>
   </module>
 
+
   <module name="TreeWalker">
     <module name="AbbreviationAsWordInName"> <!-- Java Style Guide: Camel case : defined -->
       <property name="ignoreFinal" value="false"/>
@@ -392,6 +393,13 @@
         value="^@return the *|^This method returns |^A [{]@code [a-zA-Z0-9]+[}]( is a )"/>
     </module>
     <module name="SuperClone"/>
+
+    <module name="SuppressionCommentFilter">
+      <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
+      <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
+      <property name="checkFormat" value="$1"/>
+    </module>
+
     <module name="TypeName"> <!-- Java Style Guide: Class names -->
       <message key="name.invalidPattern" value="Type name ''{0}'' must match pattern ''{1}''."/>
     </module>

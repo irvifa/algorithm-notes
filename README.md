@@ -15,3 +15,9 @@
 ## [Binary Tree Level Order Traversal](src/main/java/com/github/irvifa/algorithmnotes/leetcode/tree/binarytreelevelordertraversal)
 
 - Iterative
+
+[Maximum Depth of Binary Tree](src/main/java/com/github/irvifa/algorithmnotes/leetcode/tree/maximumdepthofbinarytree)
+
+- Recursion
+- BFS and Tail Recursion
+
