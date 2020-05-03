@@ -16,8 +16,11 @@
 
 - Iterative
 
-[Maximum Depth of Binary Tree](src/main/java/com/github/irvifa/algorithmnotes/leetcode/tree/maximumdepthofbinarytree)
+## [Maximum Depth of Binary Tree](src/main/java/com/github/irvifa/algorithmnotes/leetcode/tree/maximumdepthofbinarytree)
 
 - Recursion
 - BFS and Tail Recursion
 
+## [Path Sum](src/main/java/com/github/irvifa/algorithmnotes/leetcode/tree/pathsum)
+
+- Recursion
