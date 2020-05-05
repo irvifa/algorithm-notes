@@ -8,18 +8,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-class ColumnOffset {
-
-  TreeNode node;
-  Integer offset;
-
-  ColumnOffset(TreeNode node, Integer offset) {
-    this.node = node;
-    this.offset = offset;
-  }
-}
-
 public class Solution {
+  class ColumnOffset {
+
+    TreeNode node;
+    Integer offset;
+
+    ColumnOffset(TreeNode node, Integer offset) {
+      this.node = node;
+      this.offset = offset;
+    }
+  }
 
   public List<List<Integer>> verticalOrder(TreeNode root) {
     List<List<Integer>> output = new ArrayList<>();
@@ -33,11 +32,14 @@ public class Solution {
     int column = 0;
     queue.offer(new ColumnOffset(root, column));
 
-    int minColumn = 0, maxColumn = 0;
+    int minColumn = 0;
+    int maxColumn = 0;
 
     while (!queue.isEmpty()) {
       ColumnOffset p = queue.poll();
+      // CHECKSTYLE.OFF: ParameterAssignment
       root = p.node;
+      // CHECKSTYLE.ON: ParameterAssignment
       column = p.offset;
 
       if (root != null) {
