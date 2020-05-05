@@ -3,8 +3,8 @@ package com.github.irvifa.algorithmnotes.leetcode.tree;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class Helper {
-  private Helper() {}
+public class TreeUtil {
+  private TreeUtil() {}
 
   public static TreeNode stringToTreeNode(String rawInput) {
     String input = rawInput.trim();
