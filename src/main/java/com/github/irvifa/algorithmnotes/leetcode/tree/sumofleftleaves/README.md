@@ -42,7 +42,7 @@ as we need to visit each node to access all the nodes.
 
 The space complexity might initially seem impossible to reduce,
 as when a node has two children, we need to explore one immediately,
-and keep track of the other for exploration afterward (often, we explore the left subtree first,
+and keep track of the other for exploration afterward (often, we explore the left subtree key,
 and keep track of the right subtree for later). 
 Going down the tree, we can end up with many of these child nodes awaiting exploration. 
 However, there is a tree traversal algorithm that requires O(N) time and only O(1) space: Morris Tree Traversal.
@@ -56,7 +56,7 @@ When we follow the link back up, we also remove it so that the input tree is res
 In this way, we can no longer need an auxiliary data structure to keep track of the right subtrees.
 
 Given that this algorithm modifies the input tree, will we still be able to identify which nodes are left-leaves?
-As it turns out we still can. Whenever we reach a node for the first time, we know we haven't yet looked at its left subtree,
+As it turns out we still can. Whenever we reach a node for the key time, we know we haven't yet looked at its left subtree,
 and so have not modified it. Therefore, we can simply check if the left child is a leaf node, in the same way we did before.
 
 ```aidl

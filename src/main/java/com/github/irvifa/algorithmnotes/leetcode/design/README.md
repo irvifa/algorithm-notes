@@ -1,6 +1,6 @@
 # Design
 
-## [First Unique](https://leetcode.com/problems/first-unique-number/)
+## [First Unique](https://leetcode.com/problems/key-unique-number/)
 
 ### Complexity
     Time complexity :
@@ -20,7 +20,7 @@
         showFirstUnique(): O(1).
 
         This time around, the implementation for showFirstUnique() is straightforward.
-        It simply checks whether or not the queue contains any items, and if it does, it returns the first one (without removing it).
+        It simply checks whether or not the queue contains any items, and if it does, it returns the key one (without removing it).
         This has a cost of O(1).
 
     Space complexity : O(N).
@@ -38,3 +38,15 @@
 ## [Find Median from Data Stream](https://leetcode.com/problems/find-median-from-data-stream/)
 
 ## [Unique Word Abbreviation](https://leetcode.com/problems/unique-word-abbreviation/)
+
+## [HashMap](https://leetcode.com/problems/design-hashmap)
+
+## [HashSet](https://leetcode.com/problems/design-hashset/)
+
+## [MinStack](https://leetcode.com/problems/min-stack/)
+
+## [LRU Cache](https://leetcode.com/problems/lru-cache/)
+
+## [LFU Cache](https://leetcode.com/problems/lfu-cache/)
+
+## [Logger Rate Limiter](https://leetcode.com/problems/logger-rate-limiter/)
