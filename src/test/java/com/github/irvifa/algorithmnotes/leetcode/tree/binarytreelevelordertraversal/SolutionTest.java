@@ -4,7 +4,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.github.irvifa.algorithmnotes.leetcode.tree.Helper;
+import com.github.irvifa.algorithmnotes.leetcode.tree.TreeUtil;
 import com.github.irvifa.algorithmnotes.leetcode.tree.TreeNode;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class SolutionTest {
   @Test
   public void getInOrderTraversal() throws Exception {
     String input = "3,9,20,null,null,15,7";
-    TreeNode root = Helper.stringToTreeNode(input);
+    TreeNode root = TreeUtil.stringToTreeNode(input);
     List<List<Integer>> result = underTest.levelOrder(root);
     assertThat(result, is(
         equalTo(

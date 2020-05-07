@@ -1,4 +1,4 @@
-package com.github.irvifa.algorithmnotes.leetcode.tree.binarytreeinordertraversal;
+package com.github.irvifa.algorithmnotes.leetcode.tree.symmetrictree;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -6,8 +6,6 @@ import static org.junit.Assert.assertThat;
 
 import com.github.irvifa.algorithmnotes.leetcode.tree.TreeUtil;
 import com.github.irvifa.algorithmnotes.leetcode.tree.TreeNode;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,10 +18,10 @@ public class SolutionTest {
   }
 
   @Test
-  public void getInOrderTraversal() throws Exception {
-    String input = "1,null,2,3";
+  public void isSymmetricTree() throws Exception {
+    String input = "1,2,2,3,4,4,3";
     TreeNode root = TreeUtil.stringToTreeNode(input);
-    List<Integer> result = underTest.inorderTraversal(root);
-    assertThat(result, is(equalTo(Arrays.asList(1, 3, 2))));
+    boolean result = underTest.isSymmetric(root);
+    assertThat(result, is(equalTo(true)));
   }
 }
