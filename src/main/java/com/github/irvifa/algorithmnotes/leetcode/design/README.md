@@ -35,3 +35,6 @@
 
     Space complexity : O(1)
 
+## [Find Median from Data Stream](https://leetcode.com/problems/find-median-from-data-stream/)
+
+## [Unique Word Abbreviation](https://leetcode.com/problems/unique-word-abbreviation/)
