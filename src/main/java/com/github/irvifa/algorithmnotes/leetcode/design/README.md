@@ -43,6 +43,15 @@
 
 ## [HashSet](https://leetcode.com/problems/design-hashset/)
 
+## [LinkedList](https://leetcode.com/problems/design-linked-list/)
+
+### Complexity
+
+    Time complexity: O(1) for addAtHead and addAtTail. 
+    O(min⁡(k, N−k)) for get, addAtIndex, and deleteAtIndex, where k is an index of the element to get, add or delete.
+
+    Space complexity: O(1) for all operations.
+
 ## [MinStack](https://leetcode.com/problems/min-stack/)
 
 ## [LRU Cache](https://leetcode.com/problems/lru-cache/)
