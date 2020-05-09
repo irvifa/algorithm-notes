@@ -5,6 +5,11 @@
 # [Leetcode](src/main/java/com/github/irvifa/algorithmnotes/leetcode)
 
 ---
+## [Arrays]()
+
+### [Diet Plan Performance]()
+
+---
 
 ## [Design](src/main/java/com/github/irvifa/algorithmnotes/leetcode/design)
 
