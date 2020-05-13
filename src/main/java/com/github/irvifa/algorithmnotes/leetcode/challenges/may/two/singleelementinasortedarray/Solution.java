@@ -3,17 +3,29 @@ package com.github.irvifa.algorithmnotes.leetcode.challenges.may.two.singleeleme
 public class Solution {
 
   public int singleNonDuplicate(int[] nums) {
-    int n = nums.length;
-    if (n == 1) {
-      return nums[1];
-    }
-
-    for (int i = 0, j = 1; i < n - 1; i += 2) {
-      if (nums[i] != nums[j]) {
-        return nums[i];
+    int lo = 0;
+    int hi = nums.length - 1;
+    while (lo < hi) {
+      int mi = lo + (hi - lo) / 2;
+      if (mi % 2 == 1) {
+        mi--;
       }
-      j += 2;
+
+      if (nums[mi] != nums[mi + 1]) {
+        // We didn't find a pair. The single element must be on the left.
+        // (pipes mean start & end)
+        // Example: |0 1 1 3 3 6 6|
+        //               ^ ^
+        // Next:    |0 1 1|3 3 6 6
+        hi = mi;
+      } else {
+        // We found a pair. The single element must be on the right.
+        // Example: |1 1 3 3 5 6 6|
+        //               ^ ^
+        // Next:     1 1 3 3|5 6 6|
+        lo = mi + 2;
+      }
     }
-    return nums[n - 1];
+    return nums[lo];
   }
 }
