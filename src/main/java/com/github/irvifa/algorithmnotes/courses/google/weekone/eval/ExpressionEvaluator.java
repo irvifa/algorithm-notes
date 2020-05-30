@@ -22,7 +22,11 @@ class ExpressionEvaluator {
     public String eval() {
         try {
             Double res = parser.parse(expr_);
-            return String.format("%.2f", res);
+            String resultStr = String.format("%.2f", res);
+            if (!resultStr.equalsIgnoreCase("NaN") && !resultStr.equalsIgnoreCase("Infinity")) {
+                return resultStr;
+            }
+            return "Invalid mathematical expression.";
         } catch (Exception e) {
             return "Invalid mathematical expression.";
         }
@@ -97,7 +101,7 @@ class DoubleParser extends Parser<Double> {
         parser.addCallBrackets("(", ",", ")");
         parser.addGroupBrackets("(", null, ")");
         parser.addOperators(OperatorType.INFIX_RTL, 4, "^");
-        parser.addOperators(OperatorType.PREFIX, 3, "+", "-");
+        parser.addOperators(OperatorType.PREFIX, 3, "-");
         parser.setImplicitOperatorPrecedence(true, 2);
         parser.setImplicitOperatorPrecedence(false, 2);
         parser.addOperators(OperatorType.INFIX, 1, "*", "/");
@@ -107,7 +111,7 @@ class DoubleParser extends Parser<Double> {
 }
 
 enum OperatorType {
-    INFIX, INFIX_RTL, PREFIX, SUFFIX
+    INFIX, INFIX_RTL, PREFIX
 }
 
 class ParsingException extends RuntimeException {
@@ -128,12 +132,10 @@ class Symbol {
         this.separator = null;
         this.close = null;
     }
-    Symbol(int precedence, String separator, String close) {
-        this.precedence = precedence;
-        this.type = null;
-        this.separator = separator;
-        this.close = close;
-    }
+}
+
+enum TokenType {
+    UNRECOGNIZED, BOF, IDENTIFIER, SYMBOL, NUMBER, STRING, EOF
 }
 
 class Tokenizer {
@@ -144,7 +146,6 @@ class Tokenizer {
             "\\G\\s*[\\p{Alpha}_$][\\p{Alpha}_$\\d]*");
 
     public static final Pattern DEFAULT_STRING_PATTERN = Pattern.compile(
-            // "([^"\\]*(\\.[^"\\]*)*)"|\'([^\'\\]*(\\.[^\'\\]*)*)\'
             "\\G\\s*(\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)')");
     public static final Pattern DEFAULT_END_PATTERN = Pattern.compile("\\G\\s*\\Z");
 
@@ -152,9 +153,6 @@ class Tokenizer {
 
     public static final Pattern DEFAULT_NEWLINE_PATTERN = Pattern.compile("\\G\\h*\\v");
 
-    public enum TokenType {
-        UNRECOGNIZED, BOF, IDENTIFIER, SYMBOL, NUMBER, STRING, EOF
-    }
 
     public Pattern numberPattern = DEFAULT_NUMBER_PATTERN;
     public Pattern identifierPattern = DEFAULT_IDENTIFIER_PATTERN;
@@ -198,32 +196,15 @@ class Tokenizer {
         symbolPattern = Pattern.compile(sb.toString());
     }
 
-    public int currentColumn() {
-        return  currentPosition - lastLineStart + 1;
-    }
-
-    public TokenType consume(String expected, String errorMessage) {
-        if (!tryConsume(expected)) {
+    public TokenType next(String expected, String errorMessage) {
+        if (!hasNext(expected)) {
             throw exception(errorMessage, null);
         }
         return currentType;
     }
 
-    public TokenType consume(String expected) {
-        return consume(expected, "Expected: '" + expected + "'.");
-    }
-
-    public String consumeIdentifier() {
-        return consumeIdentifier("Identifier expected!");
-    }
-
-    public String consumeIdentifier(String errorMessage) {
-        if (currentType != TokenType.IDENTIFIER) {
-            throw exception(errorMessage, null);
-        }
-        String identifier = currentValue;
-        nextToken();
-        return identifier;
+    public TokenType next(String expected) {
+        return next(expected, "Expected: '" + expected + "'.");
     }
 
     public ParsingException exception(String message, Exception cause) {
@@ -237,12 +218,6 @@ class Tokenizer {
                 (currentValue.length() == 1 && ")]}".indexOf(currentValue) != -1));
     }
 
-    public String consumeComments() {
-        String result = skippedComments.toString();
-        skippedComments.setLength(0);
-        return result;
-    }
-
     public TokenType nextToken() {
         currentPosition += currentValue.length();
         String value;
@@ -253,8 +228,7 @@ class Tokenizer {
         boolean newLine = false;
         while (true) {
             if ((value = scanner.findWithinHorizon(lineCommentPattern, 0)) != null) {
-                skippedComments.append(value.trim() + "\n");
-                System.out.println("Comment: " + value);
+                skippedComments.append(value.trim()).append("\n");
             } else if ((value = scanner.findWithinHorizon(newlinePattern, 0)) == null) {
                 break;
             }
@@ -305,12 +279,7 @@ class Tokenizer {
         return currentType;
     }
 
-    @Override
-    public String toString() {
-        return currentType + " " + currentValue + " position: " + currentPosition;
-    }
-
-    public boolean tryConsume(String value) {
+    public boolean hasNext(String value) {
         if (!currentValue.equals(value)) {
             return false;
         }
@@ -359,10 +328,6 @@ class Parser<T> {
         throw new UnsupportedOperationException("primary(" + name + ", " + tokenizer + ")");
     }
 
-    public T suffixOperator(Tokenizer tokenizer, String name, T argument) {
-        throw new UnsupportedOperationException("suffixOperator(" + name + ", " + argument + ')');
-    }
-
     public T stringLiteral(Tokenizer tokenizer, String value) {
         throw new UnsupportedOperationException("stringLiteral(" + value + ')');
     }
@@ -374,35 +339,29 @@ class Parser<T> {
 
 class ExpressionParser<T> {
 
-    private final HashMap<String,Symbol> prefix = new HashMap<>();
-    private final HashMap<String,Symbol> infix = new HashMap<>();
-    private final HashSet<String> otherSymbols = new HashSet<>();
-    private final HashSet<String> primary = new HashSet<>();
-    private final HashMap<String, String[]> calls = new HashMap<>();
-    private final HashMap<String, String[]> groups = new HashMap<>();
+    private final HashMap<String,Symbol> prefix;
+    private final HashMap<String,Symbol> infix;
+    private final HashSet<String> otherSymbols;
+    private final HashSet<String> primary;
+    private final HashMap<String, String[]> calls;
+    private final HashMap<String, String[]> groups;
 
     private final Parser<T> parser;
-    private int strongImplicitOperatorPrecedence = -1;
-    private int weakImplicitOperatorPrecedence = -1;
+    private int strongImplicitOperatorPrecedence;
+    private int weakImplicitOperatorPrecedence;
 
     public ExpressionParser(Parser<T> parser) {
         this.parser = parser;
+        this.prefix = new HashMap<>();
+        infix = new HashMap<>();
+        otherSymbols = new HashSet<>();
+        primary = new HashSet<>();
+        calls = new HashMap<>();
+        groups = new HashMap<>();
+        strongImplicitOperatorPrecedence = -1;
+        weakImplicitOperatorPrecedence = -1;
     }
 
-    /**
-     * Adds "apply" brackets with the given precedence. Used for function calls or array element access.
-     */
-    public void addApplyBrackets(int precedence, String open, String separator, String close) {
-        infix.put(open, new Symbol(precedence, separator, close));
-        if (separator != null) {
-            otherSymbols.add(separator);
-        }
-        otherSymbols.add(close);
-    }
-
-    /**
-     * Adds "call" brackets, parsed eagerly after identifiers.
-     */
     public void addCallBrackets(String open, String separator, String close) {
         calls.put(open, new String[]{separator, close});
         otherSymbols.add(open);
@@ -412,12 +371,6 @@ class ExpressionParser<T> {
         otherSymbols.add(close);
     }
 
-    /**
-     * Adds grouping. If the separator is null, only a single element will be permitted.
-     * If the separator is empty, whitespace will be sufficient for element
-     * separation. Used for parsing lists or overriding the operator precedence (typically with
-     * parens and a null separator).
-     */
     public void addGroupBrackets(String open, String separator, String close) {
         groups.put(open, new String[] {separator, close});
         otherSymbols.add(open);
@@ -427,20 +380,6 @@ class ExpressionParser<T> {
         otherSymbols.add(close);
     }
 
-    public void addPrimary(String... names) {
-        for (String name : names) {
-            primary.add(name);
-        }
-    }
-
-    public void addTernaryOperator(int precedence, String primaryOperator, String secondaryOperator) {
-        infix.put(primaryOperator, new Symbol(precedence, secondaryOperator, null));
-        otherSymbols.add(secondaryOperator);
-    }
-
-    /**
-     * Add prefixOperator, infixOperator or postfix operators with the given precedence.
-     */
     public void addOperators(OperatorType type, int precedence, String... names) {
         for (String name : names) {
             if (type == OperatorType.PREFIX) {
@@ -451,7 +390,6 @@ class ExpressionParser<T> {
         }
     }
 
-
     public void setImplicitOperatorPrecedence(boolean strong, int precedence) {
         if (strong) {
             strongImplicitOperatorPrecedence = precedence;
@@ -460,11 +398,7 @@ class ExpressionParser<T> {
         }
     }
 
-    /**
-     * Returns all symbols registered via add...Operator and add...Bracket calls.
-     * Useful for tokenizer construction.
-     */
-    public Iterable<String> getSymbols() {
+    private Iterable<String> getSymbols() {
         HashSet<String> result = new HashSet<>();
         result.addAll(otherSymbols);
         result.addAll(infix.keySet());
@@ -473,24 +407,17 @@ class ExpressionParser<T> {
         return result;
     }
 
-    /**
-     * Parser the given expression using a simple StreamTokenizer-based parser.
-     * Leftover tokens will cause an exception.
-     */
+
     public T parse(String expr) {
         Tokenizer tokenizer = new Tokenizer(new Scanner(expr), getSymbols());
         tokenizer.nextToken();
         T result = parse(tokenizer);
-        if (tokenizer.currentType != Tokenizer.TokenType.EOF) {
+        if (tokenizer.currentType != TokenType.EOF) {
             throw tokenizer.exception("Leftover input.", null);
         }
         return result;
     }
 
-    /**
-     * Parser an expression from the given tokenizer. Leftover tokens will be ignored and
-     * may be handled by the caller.
-     */
     public T parse(Tokenizer tokenizer) {
         try {
             return parseOperator(tokenizer, -1);
@@ -540,7 +467,7 @@ class ExpressionParser<T> {
                     if (symbol.close == null) {
                         // Ternary
                         T middle = parseOperator(tokenizer, -1);
-                        tokenizer.consume(symbol.separator);
+                        tokenizer.next(symbol.separator);
                         T right = parseOperator(tokenizer, symbol.precedence);
                         left = parser.ternaryOperator(tokenizer, token, left, middle, right);
                     } else {
@@ -560,9 +487,6 @@ class ExpressionParser<T> {
                             left = parser.infixOperator(tokenizer, token, left, right);
                             break;
                         }
-                        case SUFFIX:
-                            left = parser.suffixOperator(tokenizer, token, left);
-                            break;
                         default:
                             throw new IllegalStateException();
                     }
@@ -572,74 +496,82 @@ class ExpressionParser<T> {
         return left;
     }
 
-
-    // Precondition: Opening paren consumed
-    // Postcondition: Closing paren consumed
     List<T> parseList(Tokenizer tokenizer, String separator, String close) {
         ArrayList<T> elements = new ArrayList<>();
         if (!tokenizer.currentValue.equals(close)) {
             while (true) {
                 elements.add(parse(tokenizer));
-                String op = tokenizer.currentValue;
-                if (op.equals(close)) {
+                String operator = tokenizer.currentValue;
+                if (operator.equals(close)) {
                     break;
                 }
                 if (separator == null) {
                     throw tokenizer.exception("Closing bracket expected: '" + close + "'.", null);
                 }
                 if (!separator.isEmpty()) {
-                    if (!op.equals(separator)) {
+                    if (!operator.equals(separator)) {
                         throw tokenizer.exception("List separator '" + separator + "' or closing paren '"
                                 + close + " expected.", null);
                     }
-                    tokenizer.nextToken();  // separator
+                    tokenizer.nextToken();
                 }
             }
         }
-        tokenizer.nextToken();  // closing paren
+        tokenizer.nextToken();
         return elements;
     }
 
     T parsePrimary(Tokenizer tokenizer) {
-        String candidate = tokenizer.currentValue;
-        if (groups.containsKey(candidate)) {
+        String token = tokenizer.currentValue;
+
+        if (groups.containsKey(token)) {
             tokenizer.nextToken();
-            String[] grouping = groups.get(candidate);
-            return parser.group(tokenizer, candidate, parseList(tokenizer, grouping[0], grouping[1]));
+            String[] grouping = groups.get(token);
+            return parser.group(tokenizer, token, parseList(tokenizer, grouping[0], grouping[1]));
         }
 
-        if (primary.contains(candidate)) {
+        if (primary.contains(token)) {
             tokenizer.nextToken();
-            return parser.primary(tokenizer, candidate);
+            return parser.primary(tokenizer, token);
         }
 
         T result;
         switch (tokenizer.currentType) {
             case NUMBER:
                 tokenizer.nextToken();
-                result = parser.numberLiteral(tokenizer, candidate);
+                result = parser.numberLiteral(tokenizer, token);
                 break;
             case IDENTIFIER:
+                if (!token.equals("abs") && !token.equals("sqrt")) {
+                    throw tokenizer.exception("Unexpected token type.", null);
+                }
                 tokenizer.nextToken();
                 if (calls.containsKey(tokenizer.currentValue)) {
                     String openingBracket = tokenizer.currentValue;
                     String[] call = calls.get(openingBracket);
                     tokenizer.nextToken();
-                    result = parser.call(tokenizer, candidate, openingBracket, parseList(tokenizer, call[0], call[1]));
+                    result = parser.call(tokenizer, token, openingBracket, parseList(tokenizer, call[0], call[1]));
                 } else {
-                    result = parser.identifier(tokenizer, candidate);
+                    result = parser.identifier(tokenizer, token);
                 }
                 break;
             case STRING:
                 tokenizer.nextToken();
-                result = parser.stringLiteral(tokenizer, candidate);
+                result = parser.stringLiteral(tokenizer, token);
                 break;
             default:
+                if (token.equals(".")) {
+                    tokenizer.nextToken();
+                    result = parser.numberLiteral(tokenizer, "0.00");
+                    break;
+                }
+                if (tokenizer.currentType == TokenType.EOF) {
+                    tokenizer.nextToken();
+                    result = parser.numberLiteral(tokenizer, "0.00");
+                    break;
+                }
                 throw tokenizer.exception("Unexpected token type.", null);
         }
         return result;
     }
-
-
 }
-
