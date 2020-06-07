@@ -10,6 +10,14 @@ import java.util.Scanner;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+enum OperatorType {
+    INFIX, INFIX_RTL, PREFIX
+}
+
+enum TokenType {
+    UNRECOGNIZED, BOF, IDENTIFIER, SYMBOL, NUMBER, STRING, EOF
+}
+
 class ExpressionEvaluator {
     final String expr_;
     final ExpressionParser<Double> parser;
@@ -17,6 +25,13 @@ class ExpressionEvaluator {
     public ExpressionEvaluator(String expr) {
         expr_ = expr;
         parser = DoubleParser.createParser();
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String expression = scanner.nextLine();
+        System.out.println(new ExpressionEvaluator(expression).eval());
+        scanner.close();
     }
 
     public String eval() {
@@ -31,23 +46,33 @@ class ExpressionEvaluator {
             return "Invalid mathematical expression.";
         }
     }
-
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        String expression = scanner.nextLine();
-        System.out.println(new ExpressionEvaluator(expression).eval());
-        scanner.close();
-    }
 }
 
 class DoubleParser extends Parser<Double> {
+    static ExpressionParser<Double> createParser() {
+        ExpressionParser<Double> parser = new ExpressionParser<>(new DoubleParser());
+        parser.addCallBrackets("(", ",", ")");
+        parser.addGroupBrackets("(", null, ")");
+        parser.addOperators(OperatorType.INFIX_RTL, 4, "^");
+        parser.addOperators(OperatorType.PREFIX, 3, "-");
+        parser.setImplicitOperatorPrecedence(true, 2);
+        parser.setImplicitOperatorPrecedence(false, 2);
+        parser.addOperators(OperatorType.INFIX, 1, "*", "/");
+        parser.addOperators(OperatorType.INFIX, 0, "+", "-");
+        return parser;
+    }
+
     @Override
     public Double infixOperator(Tokenizer tokenizer, String name, Double left, Double right) {
         switch (name.charAt(0)) {
-            case '+': return left + right;
-            case '-': return left - right;
-            case '*': return left * right;
-            case '/': return left / right;
+            case '+':
+                return left + right;
+            case '-':
+                return left - right;
+            case '*':
+                return left * right;
+            case '/':
+                return left / right;
             case '^': {
                 if (left < 0) {
                     throw new ParsingException("Invalid expression", null);
@@ -95,23 +120,6 @@ class DoubleParser extends Parser<Double> {
         }
         return super.call(tokenizer, identifier, bracket, arguments);
     }
-
-    static ExpressionParser<Double> createParser() {
-        ExpressionParser<Double> parser = new ExpressionParser<>(new DoubleParser());
-        parser.addCallBrackets("(", ",", ")");
-        parser.addGroupBrackets("(", null, ")");
-        parser.addOperators(OperatorType.INFIX_RTL, 4, "^");
-        parser.addOperators(OperatorType.PREFIX, 3, "-");
-        parser.setImplicitOperatorPrecedence(true, 2);
-        parser.setImplicitOperatorPrecedence(false, 2);
-        parser.addOperators(OperatorType.INFIX, 1, "*", "/");
-        parser.addOperators(OperatorType.INFIX, 0, "+", "-");
-        return parser;
-    }
-}
-
-enum OperatorType {
-    INFIX, INFIX_RTL, PREFIX
 }
 
 class ParsingException extends RuntimeException {
@@ -134,10 +142,6 @@ class Symbol {
     }
 }
 
-enum TokenType {
-    UNRECOGNIZED, BOF, IDENTIFIER, SYMBOL, NUMBER, STRING, EOF
-}
-
 class Tokenizer {
     public static final Pattern DEFAULT_NUMBER_PATTERN = Pattern.compile(
             "\\G\\s*(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?");
@@ -152,8 +156,7 @@ class Tokenizer {
     public static final Pattern DEFAULT_LINE_COMMENT_PATTERN = Pattern.compile("\\G\\h*#.*(\\v|\\Z)");
 
     public static final Pattern DEFAULT_NEWLINE_PATTERN = Pattern.compile("\\G\\h*\\v");
-
-
+    protected final Scanner scanner;
     public Pattern numberPattern = DEFAULT_NUMBER_PATTERN;
     public Pattern identifierPattern = DEFAULT_IDENTIFIER_PATTERN;
     public Pattern stringPattern = DEFAULT_STRING_PATTERN;
@@ -161,7 +164,6 @@ class Tokenizer {
     public Pattern newlinePattern = DEFAULT_NEWLINE_PATTERN;
     public Pattern lineCommentPattern = DEFAULT_LINE_COMMENT_PATTERN;
     public Pattern symbolPattern;
-
     public int currentLine = 1;
     public int lastLineStart = 0;
     public int currentPosition = 0;
@@ -169,9 +171,7 @@ class Tokenizer {
     public TokenType currentType = TokenType.BOF;
     public String leadingWhitespace = "";
     public boolean insertSemicolons;
-
-    protected final Scanner scanner;
-    private StringBuilder skippedComments = new StringBuilder();
+    private final StringBuilder skippedComments = new StringBuilder();
 
     public Tokenizer(Scanner scanner, Iterable<String> symbols, String... additionalSymbols) {
         this.scanner = scanner;
@@ -184,7 +184,7 @@ class Tokenizer {
                 return dl == 0 ? s1.compareTo(s2) : dl;
             }
         });
-        for (String symbol: symbols) {
+        for (String symbol : symbols) {
             sorted.add(symbol);
         }
         Collections.addAll(sorted, additionalSymbols);
@@ -214,7 +214,7 @@ class Tokenizer {
 
     protected boolean insertSemicolon() {
         return (currentType == TokenType.IDENTIFIER || currentType == TokenType.NUMBER ||
-                currentType == TokenType.STRING  ||
+                currentType == TokenType.STRING ||
                 (currentValue.length() == 1 && ")]}".indexOf(currentValue) != -1));
     }
 
@@ -292,7 +292,7 @@ class Parser<T> {
 
     public T apply(Tokenizer tokenizer, T base, String bracket, List<T> arguments) {
         throw new UnsupportedOperationException(
-                "apply(" + base+ ", " + bracket + ", " + arguments + ")");
+                "apply(" + base + ", " + bracket + ", " + arguments + ")");
     }
 
     public T call(Tokenizer tokenizer, String identifier, String bracket, List<T> arguments) {
@@ -339,8 +339,8 @@ class Parser<T> {
 
 class ExpressionParser<T> {
 
-    private final HashMap<String,Symbol> prefix;
-    private final HashMap<String,Symbol> infix;
+    private final HashMap<String, Symbol> prefix;
+    private final HashMap<String, Symbol> infix;
     private final HashSet<String> otherSymbols;
     private final HashSet<String> primary;
     private final HashMap<String, String[]> calls;
@@ -372,7 +372,7 @@ class ExpressionParser<T> {
     }
 
     public void addGroupBrackets(String open, String separator, String close) {
-        groups.put(open, new String[] {separator, close});
+        groups.put(open, new String[]{separator, close});
         otherSymbols.add(open);
         if (separator != null) {
             otherSymbols.add(separator);
@@ -443,7 +443,7 @@ class ExpressionParser<T> {
     private T parseOperator(Tokenizer tokenizer, int precedence) {
         T left = parsePrefix(tokenizer);
 
-        while(true) {
+        while (true) {
             String token = tokenizer.currentValue;
             Symbol symbol = infix.get(token);
             if (symbol == null) {
